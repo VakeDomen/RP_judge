@@ -65,6 +65,7 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
             // go from oldest to newest
             let mut last_compile = false;
             let mut overall_compile = true;
+            let mut successfull_commits = 0;
             for commit_string in commits.iter().rev() {
                 println!("{}", format!("git checkout {}", commit_string));
                 // change git repo to sprcified commit
@@ -85,6 +86,7 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                 // if no warrnings/errors => no output => successfull compile
                 if command_output.is_empty() {
                     last_compile = true;
+                    successfull_commits += 1;                    
                 }
                 // if warrnings or errors, compilation was not successful
                 if !command_output.is_empty() {
@@ -93,20 +95,28 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                 }
             }
             
-            save_compilation_results_to_submission(submission, task, last_compile, overall_compile);
+            save_compilation_results_to_submission(submission, task, last_compile, overall_compile, successfull_commits);
         }
     }
 }
 
-fn save_compilation_results_to_submission(submission: &mut StudentProjectSubmission, task: &str, last_compile: bool, overall_compile: bool) {
+fn save_compilation_results_to_submission(
+    submission: &mut StudentProjectSubmission, 
+    task: &str, 
+    last_compile: bool, 
+    overall_compile: bool,
+    successfull_commits: i32,
+) {
     match task {
         "Task1" => {
             submission.all_commits_compile_task1 = Some(overall_compile); 
             submission.final_commit_compile_task1 = Some(last_compile);
+            submission.successfull_compiles_task1 = Some(successfull_commits);
         },
         "Task2" => {
             submission.all_commits_compile_task2 = Some(overall_compile); 
             submission.final_commit_compile_task2 = Some(last_compile);
+            submission.successfull_compiles_task2 = Some(successfull_commits);
         },
         _ => (),
     }
