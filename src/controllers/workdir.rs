@@ -1,4 +1,4 @@
-use std::{fs, io};
+use std::fs;
 use regex::Regex;
 use std::io::Read;
 
@@ -17,6 +17,7 @@ pub fn setup_workdir() {
 
     // make sources folder
     if let false = check_dir_exists("rp_workspace/sources") {
+        println!("[WD] Creating sources folder!");
         if let Err(e) = run_command("mkdir rp_workspace/sources") {
             println!("[WD] Error creating sources directory!\n{:#?}", e);
             std::process::exit(1);
@@ -31,6 +32,7 @@ pub fn setup_workdir() {
 
     // make repos folder
     if let false = check_dir_exists("rp_workspace/repos") {
+        println!("[WD] Creating repos folder!");
         if let Err(e) = run_command("mkdir rp_workspace/repos") {
             println!("[WD] Error creating repos directory!\n{:#?}", e);
             std::process::exit(1);
@@ -49,31 +51,53 @@ pub fn move_sources(sources: Vec<FilePath>) {
         println!("[WD] No sources!\nPlease specify source file paths in arguments of the program. You can point to the *.zip file downloaded from Moodle or the folder that contains files and folders extracted from the zip.");
         std::process::exit(0);
     }
+    // make temporary folder
+    if let false = check_dir_exists("rp_workspace/tmp") {
+        println!("[WD] Creatin repos folder!");
+        if let Err(e) = run_command("mkdir rp_workspace/tmp") {
+            println!("[WD] Error creating temporary directory!\n{:#?}", e);
+            std::process::exit(1);
+        };
+    }
 
     // unzip source into sources folder one by one
     for source in sources.iter() {
         match source {
             FilePath::Zip(path) => {
-                if let Err(e) = run_command(&format!("unzip \"{}\" -d rp_workspace/sources/", path)) {
+                // clear tmp folder
+                if let Err(e) = run_command("rm -rf rp_workspace/tmp/*") {
+                    println!("[WD] Error clearing temporary directory!\n{:#?}", e);
+                    std::process::exit(1);
+                };
+
+                // extract zip into tmp folder
+                if let Err(e) = run_command(&format!("unzip \"{}\" -d rp_workspace/tmp/", path)) {
                     println!("[WD] Error extracting source into sources directory!\n{:#?}", e);
                     std::process::exit(1);
                 };
+
                 // get names of all extracted folders
-                let folders = match folder_names("./rp_workspace/sources/") {
+                let folders = match folder_names("./rp_workspace/tmp/") {
                     Ok(f) => f,
                     Err(e) => {
-                        println!("[WD] Error extracting sources in sources directory!\n{:#?}", e);
+                        println!("[WD] Error extracting sources in temporary directory!\n{:#?}", e);
                         std::process::exit(1);
                     }
                 };
                 // remove spaces from all extracted sources
                 for folder_name in folders.iter() {
                     let no_space_path = folder_name.replace(" ", "_");
-                    if let Err(e) = run_command(&format!("mv \"rp_workspace/sources/{}\" rp_workspace/sources/{}", folder_name, no_space_path)) {
+                    if let Err(e) = run_command(&format!("mv \"rp_workspace/tmp/{}\" rp_workspace/tmp/{}", folder_name, no_space_path)) {
                         println!("[WD] Error renaming source in sources directory to remove spaces!\n{:#?}", e);
                         std::process::exit(1);
                     };
                 }
+
+                // move extracted sourcs from tmp to sources folder
+                if let Err(e) = run_command(&format!("mv rp_workspace/tmp/* rp_workspace/sources/")) {
+                    println!("[WD] Error moving extracted sources from temporary folder to sources folder!\n{:#?}", e);
+                    std::process::exit(1);
+                };
             },
             _ => continue,
         }
@@ -96,7 +120,7 @@ fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSu
     let re = Regex::new(r#"<a href="(https://(github|gitlab)\.com/[^"]+)">"#).unwrap();
     for folder in folder_names.iter() {
         let mut subm = StudentProjectSubmission::new(folder.clone());
-        
+
         // Construct the path to the HTML file
         let path = format!("./rp_workspace/sources/{}/onlinetext.html", folder);
         // Open the HTML file
