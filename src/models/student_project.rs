@@ -4,4 +4,5 @@ pub struct StudentProjectSubmission {
     pub git_repo: Option<String>,
     pub has_two_commits: Option<bool>,
     pub all_commits_compile: Option<bool>,
+    pub cloned: bool,
 }

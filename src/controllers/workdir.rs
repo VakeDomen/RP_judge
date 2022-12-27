@@ -7,18 +7,12 @@ use crate::models::{file_path::FilePath, student_project::StudentProjectSubmissi
 use super::{validator::{check_workdir, check_dir_exists}, os_helper::{create_workdir, run_command}};
 
 pub fn setup_workdir() {
+    // create working directory
     if let false = check_workdir() {
         if let Err(e) = create_workdir() {
             println!("[WD] Error creating working directory!\n{:#?}", e);
             std::process::exit(1);
         }
-    }
-}
-
-pub fn move_sources(sources: Vec<FilePath>) {
-    if sources.is_empty() {
-        println!("[WD] No sources!\nPlease specify source file paths in arguments of the program. You can point to the *.zip file downloaded from Moodle or the folder that contains files and folders extracted from the zip.");
-        std::process::exit(0);
     }
 
     // make sources folder
@@ -31,9 +25,30 @@ pub fn move_sources(sources: Vec<FilePath>) {
 
     // clear sources folder
     if let Err(e) = run_command("rm -rf rp_workspace/sources/*") {
-        println!("[WD] Error creating sources directory!\n{:#?}", e);
+        println!("[WD] Error clearing sources directory!\n{:#?}", e);
         std::process::exit(1);
     };
+
+    // make repos folder
+    if let false = check_dir_exists("rp_workspace/repos") {
+        if let Err(e) = run_command("mkdir rp_workspace/repos") {
+            println!("[WD] Error creating repos directory!\n{:#?}", e);
+            std::process::exit(1);
+        };
+    }
+
+    // clear repos folder
+    if let Err(e) = run_command("rm -rf rp_workspace/repos/*") {
+        println!("[WD] Error clearing repos directory!\n{:#?}", e);
+        std::process::exit(1);
+    };
+}
+
+pub fn move_sources(sources: Vec<FilePath>) {
+    if sources.is_empty() {
+        println!("[WD] No sources!\nPlease specify source file paths in arguments of the program. You can point to the *.zip file downloaded from Moodle or the folder that contains files and folders extracted from the zip.");
+        std::process::exit(0);
+    }
 
     // unzip source into sources folder one by one
     for source in sources.iter() {
@@ -43,6 +58,22 @@ pub fn move_sources(sources: Vec<FilePath>) {
                     println!("[WD] Error extracting source into sources directory!\n{:#?}", e);
                     std::process::exit(1);
                 };
+                // get names of all extracted folders
+                let folders = match folder_names("./rp_workspace/sources/") {
+                    Ok(f) => f,
+                    Err(e) => {
+                        println!("[WD] Error extracting sources in sources directory!\n{:#?}", e);
+                        std::process::exit(1);
+                    }
+                };
+                // remove spaces from all extracted sources
+                for folder_name in folders.iter() {
+                    let no_space_path = folder_name.replace(" ", "_");
+                    if let Err(e) = run_command(&format!("mv \"rp_workspace/sources/{}\" rp_workspace/sources/{}", folder_name, no_space_path)) {
+                        println!("[WD] Error renaming source in sources directory to remove spaces!\n{:#?}", e);
+                        std::process::exit(1);
+                    };
+                }
             },
             _ => continue,
         }
@@ -69,6 +100,7 @@ fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSu
             git_repo: None ,
             has_two_commits: None,
             all_commits_compile: None,
+            cloned: false,
         };
         // Construct the path to the HTML file
         let path = format!("./rp_workspace/sources/{}/onlinetext.html", folder);
