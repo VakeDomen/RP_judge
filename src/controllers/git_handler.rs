@@ -14,24 +14,21 @@ pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>) {
     }
 
     for submission in submissions.iter_mut() {
-        let repo = match &submission.git_repo {
-            Some(repo) => repo,
-            None => {
-                println!("[GIT HANDLER] No git repo detected: {:#?}",submission);
+        // if submission has a repo
+        if let Some(repo) = &submission.git_repo {
+            // try to clone it
+            if let Err(e) = run_command(format!("git clone {} ./rp_workspace/repos/{}", repo, submission.student_folder).as_str()) {
+                println!("[GIT HANDLER] Error cloning git repo({}):\n{:#?}",repo, e);
                 continue;
-            },
-        };
-        if let Err(e) = run_command(format!("git clone {} ./rp_workspace/repos/{}", repo, submission.student_folder).as_str()) {
-            println!("[GIT HANDLER] Error cloning git repo({}):\n{:#?}",repo, e);
-            std::process::exit(1);
-        }; 
-        submission.cloned = true;
+            }; 
+            submission.cloned = true;
+        }
     }
 }
 
 // git -C ./rp_workspace/repos/Luka_Ur┼бi─Н_205159_assignsubmission_onlinetext_ --no-pager log --pretty="%h %s" -- Task2
 
-pub fn check_commits(submissions: &mut Vec<StudentProjectSubmission>) {
+pub fn extract_commits(submissions: &mut Vec<StudentProjectSubmission>) {
     if let false = check_dir_exists("rp_workspace/repos") {
         println!("[GIT HANDLER] Error reading repos directory!");
         std::process::exit(1);
@@ -40,7 +37,7 @@ pub fn check_commits(submissions: &mut Vec<StudentProjectSubmission>) {
     for submission in submissions.iter_mut() {
         for task in tasks_to_check.iter() {
             // check commits for task 1
-            let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h %s\" -- {}", submission.student_folder, task).as_str()) {
+            let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h|||%s\" -- {}", submission.student_folder, task).as_str()) {
                 Ok(t) => t,
                 Err(e) => {
                     println!("[GIT HANDLER] Error checking commits for git repo({}):\n{:#?}",submission.student_folder, e);
@@ -54,7 +51,6 @@ pub fn check_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                 .collect()
             );
             save_commits_to_submission(submission, task, commits);
-            println!("Lines: {:#?}", submission.commits_task1);
         }
     }
 
