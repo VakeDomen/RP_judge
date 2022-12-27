@@ -31,6 +31,43 @@ pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>) {
 
 // git -C ./rp_workspace/repos/Luka_Ur┼бi─Н_205159_assignsubmission_onlinetext_ --no-pager log --pretty="%h %s" -- Task2
 
+pub fn check_commits(submissions: &mut Vec<StudentProjectSubmission>) {
+    if let false = check_dir_exists("rp_workspace/repos") {
+        println!("[GIT HANDLER] Error reading repos directory!");
+        std::process::exit(1);
+    }
+    let tasks_to_check = ["Task1", "Task2"];
+    for submission in submissions.iter_mut() {
+        for task in tasks_to_check.iter() {
+            // check commits for task 1
+            let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h %s\" -- {}", submission.student_folder, task).as_str()) {
+                Ok(t) => t,
+                Err(e) => {
+                    println!("[GIT HANDLER] Error checking commits for git repo({}):\n{:#?}",submission.student_folder, e);
+                    std::process::exit(1);
+                },
+            }; 
+            let commits = Some(command_output
+                .split("\n")
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string())
+                .collect()
+            );
+            save_commits_to_submission(submission, task, commits);
+            println!("Lines: {:#?}", submission.commits_task1);
+        }
+    }
+
+}
+
+fn save_commits_to_submission(submission: &mut StudentProjectSubmission, task: &str, commits: Option<Vec<String>>) {
+    match task {
+        "Task1" => submission.commits_task1 = commits,
+        "Task2" => submission.commits_task2 = commits,
+        _ => (),
+    }
+}
+
 pub fn check_structure(submissions: &mut Vec<StudentProjectSubmission>) {
     if let false = check_dir_exists("rp_workspace/repos") {
         println!("[GIT HANDLER] Error reading repos directory!");
