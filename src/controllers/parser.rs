@@ -13,12 +13,6 @@ pub fn parse_file_args(args: Vec<String>) -> Vec<FilePath> {
             },
         };
 
-        // check if path points to a directory
-        if path_meta.is_dir() {
-            files.push(FilePath::Folder(arg.to_string()));
-            continue;
-        }
-
         // check if path points to a zip file
         if path_meta.is_file() {
             let path = Path::new(arg);

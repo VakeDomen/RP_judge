@@ -1,6 +1,7 @@
 use std::env;
 
-use controllers::workdir::move_sources;
+use controllers::workdir::{move_sources, extract_submissions_from_sources};
+use models::student_project::StudentProjectSubmission;
 
 use crate::controllers::parser::parse_file_args;
 use crate::controllers::workdir::setup_workdir;
@@ -16,7 +17,7 @@ fn main() {
     
     setup_workdir();
     move_sources(file_paths);
-
+    let submissions: Vec<StudentProjectSubmission> = extract_submissions_from_sources();
+    println!("Submissions: {:#?}", submissions);
 }
-
 
