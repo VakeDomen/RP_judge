@@ -28,6 +28,98 @@ pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>) {
 
 // git -C ./rp_workspace/repos/Luka_Ur┼бi─Н_205159_assignsubmission_onlinetext_ --no-pager log --pretty="%h %s" -- Task2
 
+pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
+    if let false = check_dir_exists("rp_workspace/repos") {
+        println!("[GIT HANDLER] Error reading repos directory!");
+        std::process::exit(1);
+    }
+
+    let tasks_to_check = ["Task1", "Task2"];
+    for submission in submissions.iter_mut() {
+        // check if submission has cloned a
+        if !submission.cloned {
+            println!("[GIT HANDLER] Submission was not cloned: Skipping!");
+            continue;
+        }
+
+        for task in tasks_to_check.iter() {
+            // clone string so we can borrow submission mutably
+            let student_folder = submission.student_folder.clone();
+
+            // fetch commits of submission
+            // if there are none, continue to next task/submisssion
+            let commits  =  match get_commits_from_submission(task, submission) {
+                Some(c) => c,
+                None => {
+                    println!("[GIT HANDLER] Submission task ({}) does not have commits: Skipping!", task);
+                    continue;
+                },
+            };
+
+            // if no commits, skip submission
+            if commits.is_empty() {
+                continue;
+            }
+            
+            // go trough commits one by one and check if they compile
+            // go from oldest to newest
+            let mut last_compile = false;
+            let mut overall_compile = true;
+            for commit_string in commits.iter().rev() {
+                println!("{}", format!("git checkout {}", commit_string));
+                // change git repo to sprcified commit
+                if let Err(e) = run_command(format!("git -C ./rp_workspace/repos/{} checkout {}", student_folder, commit_string).as_str()) {
+                    println!("[GIT HANDLER] Error switching commits on repo({}): {:#?}", student_folder, e);
+                    continue;
+                }; 
+
+                // compile with gcc
+                let command_output = match run_command(format!("gcc ./rp_workspace/repos/{}/{}/main.c", student_folder, task).as_str()) {
+                    Ok(t) => t,
+                    Err(_) => {
+                        overall_compile = false;
+                        continue;
+                    },
+                }; 
+
+                // if no warrnings/errors => no output => successfull compile
+                if command_output.is_empty() {
+                    last_compile = true;
+                }
+                // if warrnings or errors, compilation was not successful
+                if !command_output.is_empty() {
+                    last_compile = false;
+                    overall_compile = false;
+                }
+            }
+            
+            save_compilation_results_to_submission(submission, task, last_compile, overall_compile);
+        }
+    }
+}
+
+fn save_compilation_results_to_submission(submission: &mut StudentProjectSubmission, task: &str, last_compile: bool, overall_compile: bool) {
+    match task {
+        "Task1" => {
+            submission.all_commits_compile_task1 = Some(overall_compile); 
+            submission.final_commit_compile_task1 = Some(last_compile);
+        },
+        "Task2" => {
+            submission.all_commits_compile_task2 = Some(overall_compile); 
+            submission.final_commit_compile_task2 = Some(last_compile);
+        },
+        _ => (),
+    }
+}
+
+fn get_commits_from_submission(task: &str, submission: &mut StudentProjectSubmission) -> Option<Vec<String>> {
+    match task {
+        "Task1" => submission.commits_task1.clone(),
+        "Task2" => submission.commits_task2.clone(),
+        _ => None,
+    }
+}
+
 pub fn extract_commits(submissions: &mut Vec<StudentProjectSubmission>) {
     if let false = check_dir_exists("rp_workspace/repos") {
         println!("[GIT HANDLER] Error reading repos directory!");
@@ -37,7 +129,7 @@ pub fn extract_commits(submissions: &mut Vec<StudentProjectSubmission>) {
     for submission in submissions.iter_mut() {
         for task in tasks_to_check.iter() {
             // check commits for task 1
-            let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h|||%s\" -- {}", submission.student_folder, task).as_str()) {
+            let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\" -- {}", submission.student_folder, task).as_str()) {
                 Ok(t) => t,
                 Err(e) => {
                     println!("[GIT HANDLER] Error checking commits for git repo({}):\n{:#?}",submission.student_folder, e);

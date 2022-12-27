@@ -10,6 +10,8 @@ pub struct StudentProjectSubmission {
     pub has_task2: Option<bool>,
     pub all_commits_compile_task1: Option<bool>,
     pub all_commits_compile_task2: Option<bool>,
+    pub final_commit_compile_task1: Option<bool>,
+    pub final_commit_compile_task2: Option<bool>,
 }
 
 impl StudentProjectSubmission {
@@ -24,6 +26,8 @@ impl StudentProjectSubmission {
             has_task2: None, 
             all_commits_compile_task1: None, 
             all_commits_compile_task2: None, 
+            final_commit_compile_task1: None,
+            final_commit_compile_task2: None,
         }
     }
 }
