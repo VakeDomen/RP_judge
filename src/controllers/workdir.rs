@@ -4,7 +4,7 @@ use std::io::Read;
 
 use crate::models::{file_path::FilePath, student_project::StudentProjectSubmission};
 
-use super::{validator::{check_workdir, check_dir_exists}, os_helper::{create_workdir, run_command}};
+use super::{validator::{check_workdir, check_dir_exists}, os_helper::{create_workdir, run_command, folder_names}};
 
 pub fn setup_workdir() {
     // create working directory
@@ -95,13 +95,8 @@ fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSu
     let mut submissions = vec![];
     let re = Regex::new(r#"<a href="(https://(github|gitlab)\.com/[^"]+)">"#).unwrap();
     for folder in folder_names.iter() {
-        let mut subm = StudentProjectSubmission { 
-            student_folder: folder.clone(), 
-            git_repo: None ,
-            has_two_commits: None,
-            all_commits_compile: None,
-            cloned: false,
-        };
+        let mut subm = StudentProjectSubmission::new(folder.clone());
+        
         // Construct the path to the HTML file
         let path = format!("./rp_workspace/sources/{}/onlinetext.html", folder);
         // Open the HTML file
@@ -131,13 +126,4 @@ fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSu
         submissions.push(subm);
     }
     submissions
-}
-
-fn folder_names(path: &str) -> Result<Vec<String>, io::Error> {
-    Ok(fs::read_dir(path)
-        .unwrap()
-        .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.file_type().unwrap().is_dir())
-        .map(|entry| entry.file_name().into_string().unwrap())
-        .collect::<Vec<String>>())
 }

@@ -1,6 +1,6 @@
 use crate::models::student_project::StudentProjectSubmission;
 
-use super::{validator::check_dir_exists, os_helper::run_command};
+use super::{validator::check_dir_exists, os_helper::{run_command, folder_names}};
 
 
 pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>) {
@@ -26,5 +26,29 @@ pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>) {
             std::process::exit(1);
         }; 
         submission.cloned = true;
+    }
+}
+
+// git -C ./rp_workspace/repos/Luka_Ur┼бi─Н_205159_assignsubmission_onlinetext_ --no-pager log --pretty="%h %s" -- Task2
+
+pub fn check_structure(submissions: &mut Vec<StudentProjectSubmission>) {
+    if let false = check_dir_exists("rp_workspace/repos") {
+        println!("[GIT HANDLER] Error reading repos directory!");
+        std::process::exit(1);
+    }
+
+    for submission in submissions.iter_mut() {
+        if !submission.cloned {
+            continue;
+        }
+        let folders = match folder_names(&format!("./rp_workspace/repos/{}", submission.student_folder)) {
+            Ok(f) => f,
+            Err(e) => {
+                println!("[WD] Error checking repository folder structure!\n{:#?}", e);
+                std::process::exit(1);
+            }
+        };
+        submission.has_task1 = Some(folders.contains(&"Task1".to_string()));
+        submission.has_task2 = Some(folders.contains(&"Task2".to_string()));
     }
 }
