@@ -75,6 +75,7 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                 let command_output = match run_command(format!("gcc ./rp_workspace/repos/{}/{}/main.c", student_folder, task).as_str()) {
                     Ok(t) => t,
                     Err(_) => {
+                        last_compile = false;
                         overall_compile = false;
                         continue;
                     },
