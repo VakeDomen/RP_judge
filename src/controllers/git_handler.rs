@@ -26,8 +26,6 @@ pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>) {
     }
 }
 
-// git -C ./rp_workspace/repos/Luka_Ur┼бi─Н_205159_assignsubmission_onlinetext_ --no-pager log --pretty="%h %s" -- Task2
-
 pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
     if let false = check_dir_exists("rp_workspace/repos") {
         println!("[GIT HANDLER] Error reading repos directory!");
@@ -65,9 +63,8 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
             // go from oldest to newest
             let mut last_compile = false;
             let mut overall_compile = true;
-            let mut successfull_commits = 0;
+            let mut successful_commits = 0;
             for commit_string in commits.iter().rev() {
-                println!("{}", format!("git checkout {}", commit_string));
                 // change git repo to sprcified commit
                 if let Err(e) = run_command(format!("git -C ./rp_workspace/repos/{} checkout {}", student_folder, commit_string).as_str()) {
                     println!("[GIT HANDLER] Error switching commits on repo({}): {:#?}", student_folder, e);
@@ -83,10 +80,10 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                     },
                 }; 
 
-                // if no warrnings/errors => no output => successfull compile
+                // if no warrnings/errors => no output => successful compile
                 if command_output.is_empty() {
                     last_compile = true;
-                    successfull_commits += 1;                    
+                    successful_commits += 1;                    
                 }
                 // if warrnings or errors, compilation was not successful
                 if !command_output.is_empty() {
@@ -95,7 +92,7 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                 }
             }
             
-            save_compilation_results_to_submission(submission, task, last_compile, overall_compile, successfull_commits);
+            save_compilation_results_to_submission(submission, task, last_compile, overall_compile, successful_commits);
         }
     }
 }
@@ -105,18 +102,18 @@ fn save_compilation_results_to_submission(
     task: &str, 
     last_compile: bool, 
     overall_compile: bool,
-    successfull_commits: i32,
+    successful_commits: i32,
 ) {
     match task {
         "Task1" => {
             submission.all_commits_compile_task1 = Some(overall_compile); 
             submission.final_commit_compile_task1 = Some(last_compile);
-            submission.successfull_compiles_task1 = Some(successfull_commits);
+            submission.successful_compiles_task1 = Some(successful_commits);
         },
         "Task2" => {
             submission.all_commits_compile_task2 = Some(overall_compile); 
             submission.final_commit_compile_task2 = Some(last_compile);
-            submission.successfull_compiles_task2 = Some(successfull_commits);
+            submission.successful_compiles_task2 = Some(successful_commits);
         },
         _ => (),
     }
@@ -155,7 +152,6 @@ pub fn extract_commits(submissions: &mut Vec<StudentProjectSubmission>) {
             save_commits_to_submission(submission, task, commits);
         }
     }
-
 }
 
 fn save_commits_to_submission(submission: &mut StudentProjectSubmission, task: &str, commits: Option<Vec<String>>) {

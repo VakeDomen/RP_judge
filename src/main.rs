@@ -3,6 +3,7 @@ use std::env;
 use controllers::workdir::{move_sources, extract_submissions_from_sources};
 use models::student_project::StudentProjectSubmission;
 
+use crate::controllers::exporter::export_to_xlsx;
 use crate::controllers::git_handler::{clone_repos, check_structure, extract_commits, compile_commits};
 use crate::controllers::parser::parse_file_args;
 use crate::controllers::workdir::setup_workdir;
@@ -49,7 +50,13 @@ fn main() {
     compile_commits(&mut submissions);
     println!("\tDone!");
 
-    println!("{:#?}", submissions);
+    print!("[MAIN] Exporting submissions...");
+    match export_to_xlsx(submissions, "./rp_workspace/results.xlsx") {
+        Ok(_) => println!("\tDone!"),
+        Err(e) => println!("[MAIN] Error! Something went wrong exporting results: {:#?}", e),
+    };
+    
+    // println!("{:#?}", submissions);
 
 }
 
