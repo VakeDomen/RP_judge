@@ -1,6 +1,6 @@
 use crate::models::student_project::StudentProjectSubmission;
 
-use super::{validator::check_dir_exists, os_helper::{run_command, folder_names}};
+use super::{validator::{check_dir_exists}, os_helper::{run_command, folder_names}};
 
 
 pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>) {
@@ -32,12 +32,23 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
         std::process::exit(1);
     }
 
-    let tasks_to_check = ["Task1", "Task2"];
+    
     for submission in submissions.iter_mut() {
         // check if submission has cloned a
         if !submission.cloned {
             println!("[GIT HANDLER] Submission was not cloned: Skipping!");
             continue;
+        }
+
+        let mut tasks_to_check = vec![];
+        // find task 1 name
+        if let Some(t1) = submission.has_task1.clone() {
+            tasks_to_check.push(t1);
+        }
+
+        // find task 2 name
+        if let Some(t2) = submission.has_task2.clone() {
+            tasks_to_check.push(t2);
         }
 
         for task in tasks_to_check.iter() {
@@ -83,13 +94,10 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                             command_output = t;
                             if command_output.is_empty() {
                                 submission.gcc_standard = Some(standard.to_string());
-                                last_compile = true;
                                 break;
-                            } else {
-                                last_compile = false;
                             }
                         },
-                        Err(_) => last_compile = false,
+                        Err(e) => command_output = e.to_string(),
                     }; 
                 }
 
@@ -117,27 +125,38 @@ fn save_compilation_results_to_submission(
     overall_compile: bool,
     successful_commits: i32,
 ) {
-    match task {
-        "Task1" => {
+    if let Some(task1) = submission.has_task1.clone() {
+        if task1 == task {
             submission.all_commits_compile_task1 = Some(overall_compile); 
             submission.final_commit_compile_task1 = Some(last_compile);
             submission.successful_compiles_task1 = Some(successful_commits);
-        },
-        "Task2" => {
+            return;
+        }
+    }
+
+    if let Some(task2) = submission.has_task2.clone() {
+        if task2 == task {
             submission.all_commits_compile_task2 = Some(overall_compile); 
             submission.final_commit_compile_task2 = Some(last_compile);
             submission.successful_compiles_task2 = Some(successful_commits);
-        },
-        _ => (),
+            return;
+        }
     }
 }
 
 fn get_commits_from_submission(task: &str, submission: &mut StudentProjectSubmission) -> Option<Vec<String>> {
-    match task {
-        "Task1" => submission.commits_task1.clone(),
-        "Task2" => submission.commits_task2.clone(),
-        _ => None,
+    if let Some(task1) = submission.has_task1.clone() {
+        if task1 == task {
+            return submission.commits_task1.clone();
+        }
     }
+
+    if let Some(task2) = submission.has_task2.clone() {
+        if task2 == task {
+           return submission.commits_task2.clone();
+        }
+    }
+    None
 }
 
 pub fn extract_commits(submissions: &mut Vec<StudentProjectSubmission>) {
@@ -145,8 +164,18 @@ pub fn extract_commits(submissions: &mut Vec<StudentProjectSubmission>) {
         println!("[GIT HANDLER] Error reading repos directory!");
         std::process::exit(1);
     }
-    let tasks_to_check = ["Task1", "Task2"];
     for submission in submissions.iter_mut() {
+        
+        let mut tasks_to_check = vec![];
+        // find task 1 name
+        if let Some(t1) = submission.has_task1.clone() {
+            tasks_to_check.push(t1);
+        }
+
+        // find task 2 name
+        if let Some(t2) = submission.has_task2.clone() {
+            tasks_to_check.push(t2);
+        }
         for task in tasks_to_check.iter() {
             // check commits for task 1
             let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\" -- {}", submission.student_folder, task).as_str()) {
@@ -168,10 +197,18 @@ pub fn extract_commits(submissions: &mut Vec<StudentProjectSubmission>) {
 }
 
 fn save_commits_to_submission(submission: &mut StudentProjectSubmission, task: &str, commits: Option<Vec<String>>) {
-    match task {
-        "Task1" => submission.commits_task1 = commits,
-        "Task2" => submission.commits_task2 = commits,
-        _ => (),
+    if let Some(task1) = submission.has_task1.clone() {
+        if task1 == task {
+            submission.commits_task1 = commits;
+            return;
+        }
+    }
+
+    if let Some(task2) = submission.has_task2.clone() {
+        if task2 == task {
+            submission.commits_task2 = commits;
+            return;
+        }
     }
 }
 
@@ -181,10 +218,13 @@ pub fn check_structure(submissions: &mut Vec<StudentProjectSubmission>) {
         std::process::exit(1);
     }
 
+    
     for submission in submissions.iter_mut() {
         if !submission.cloned {
             continue;
         }
+        // validate_and_fix_task_names(&format!("./rp_workspace/repos/{}", submission.student_folder));
+
         let folders = match folder_names(&format!("./rp_workspace/repos/{}", submission.student_folder)) {
             Ok(f) => f,
             Err(e) => {
@@ -192,7 +232,16 @@ pub fn check_structure(submissions: &mut Vec<StudentProjectSubmission>) {
                 std::process::exit(1);
             }
         };
-        submission.has_task1 = Some(folders.contains(&"Task1".to_string()));
-        submission.has_task2 = Some(folders.contains(&"Task2".to_string()));
+        let accepted_folder_names_task1 = ["Task1", "task1", "1task", "1Task", "task_1", "Task_1"];
+        let accepted_folder_names_task2 = ["Task2", "task2", "2task", "2Task", "task_2", "Task_2"];
+    
+        submission.has_task1 = folders
+            .iter()
+            .find(|folder| accepted_folder_names_task1.contains(&folder.as_str()))
+            .map(|name| name.to_string());
+        submission.has_task2 = folders
+            .iter()
+            .find(|folder| accepted_folder_names_task2.contains(&folder.as_str()))
+            .map(|name| name.to_string());
     }
 }

@@ -8,8 +8,8 @@ pub struct StudentProjectSubmission {
 
     pub commits_task1: Option<Vec<String>>,
     pub commits_task2: Option<Vec<String>>,
-    pub has_task1: Option<bool>,
-    pub has_task2: Option<bool>,
+    pub has_task1: Option<String>,
+    pub has_task2: Option<String>,
     pub all_commits_compile_task1: Option<bool>,
     pub all_commits_compile_task2: Option<bool>,
     pub final_commit_compile_task1: Option<bool>,

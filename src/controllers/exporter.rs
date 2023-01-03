@@ -156,33 +156,23 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
             }
 
             if *header == "has_task1" {
-                if let Some(val) = submission.has_task1 {
-                    let format = if val {
-                        Some(&green_format)
-                    } else {
-                        Some(&red_format)
-                    };
-                    sheet.write_boolean(
+                if let Some(val) = submission.has_task1.clone() {
+                    sheet.write_string(
                         row.try_into().unwrap(), 
                         headers.iter().position(|&r| r == *header).unwrap().try_into().unwrap(), 
-                        val, 
-                        format
+                        val.as_str(), 
+                        Some(&header_format)
                     )?;
                 }
             }
 
             if *header == "has_task2" {
-                if let Some(val) = submission.has_task2 {
-                    let format = if val {
-                        Some(&green_format)
-                    } else {
-                        Some(&red_format)
-                    };
-                    sheet.write_boolean(
+                if let Some(val) = submission.has_task2.clone() {
+                    sheet.write_string(
                         row.try_into().unwrap(), 
                         headers.iter().position(|&r| r == *header).unwrap().try_into().unwrap(), 
-                        val, 
-                        format
+                        val.as_str(), 
+                        Some(&header_format)
                     )?;
                 }
             }

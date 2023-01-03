@@ -108,7 +108,7 @@ pub fn extract_submissions_from_sources() -> Vec<StudentProjectSubmission> {
     let folder_names: Vec<String> = match folder_names("./rp_workspace/sources") {
         Ok(s) => s,
         Err(e) => {
-            println!("[WD] Error creating sources directory!\n{:#?}", e);
+            println!("[WD] Error fetching folder names!\n{:#?}", e);
             std::process::exit(1);
         }
     };
