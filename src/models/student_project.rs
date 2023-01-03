@@ -4,6 +4,8 @@ pub struct StudentProjectSubmission {
     pub git_repo: Option<String>,
     pub cloned: bool,
 
+    pub gcc_standard: Option<String>,
+
     pub commits_task1: Option<Vec<String>>,
     pub commits_task2: Option<Vec<String>>,
     pub has_task1: Option<bool>,
@@ -22,6 +24,7 @@ impl StudentProjectSubmission {
             student_folder: name, 
             git_repo: None, 
             cloned: false, 
+            gcc_standard: None,
             commits_task1: None, 
             commits_task2: None, 
             has_task1: None, 

@@ -82,6 +82,7 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                         Ok(t) => {
                             command_output = t;
                             if command_output.is_empty() {
+                                submission.gcc_standard = Some(standard.to_string());
                                 last_compile = true;
                                 break;
                             } else {
