@@ -1,49 +1,16 @@
-use std::{fs::File, error::Error, io::Write};
+use std::error::Error;
 use xlsxwriter::{Workbook, FormatUnderline, FormatColor};
 
 use crate::models::student_project::StudentProjectSubmission;
-
-pub fn export_to_csv(submissions: Vec<StudentProjectSubmission>, file_path: &str) -> Result<(), Box<dyn Error>> {
-    // Open the file at the given file path in write mode
-    let mut file = File::create(file_path)?;
-
-    // Write the CSV header to the file
-    let header = "student_folder,git_repo,cloned,commits_task1,commits_task2,has_task1,has_task2,all_commits_compile_task1,all_commits_compile_task2,final_commit_compile_task1,final_commit_compile_task2,successful_compiles_task1,successful_compiles_task2\n";
-    file.write_all(header.as_bytes())?;
-
-    // Iterate through the submissions and write each one to a new line in the CSV file
-    for submission in submissions {
-        let line = format!(
-            "{},{},{},{:?},{:?},{},{},{},{},{},{},{},{}\n",
-            submission.student_folder,
-            submission.git_repo.unwrap_or_else(|| "".to_string()),
-            submission.cloned,
-            submission.commits_task1.as_ref().map(|v| v.join(" ")).unwrap_or_else(|| "".to_string()),
-            submission.commits_task2.as_ref().map(|v| v.join(" ")).unwrap_or_else(|| "".to_string()),
-            submission.has_task1.map(|b| b.to_string()).unwrap_or_else(|| "".to_string()),
-            submission.has_task2.map(|b| b.to_string()).unwrap_or_else(|| "".to_string()),
-            submission.all_commits_compile_task1.map(|b| b.to_string()).unwrap_or_else(|| "".to_string()),
-            submission.all_commits_compile_task2.map(|b| b.to_string()).unwrap_or_else(|| "".to_string()),
-            submission.final_commit_compile_task1.map(|b| b.to_string()).unwrap_or_else(|| "".to_string()),
-            submission.final_commit_compile_task2.map(|b| b.to_string()).unwrap_or_else(|| "".to_string()),
-            submission.successful_compiles_task1.map(|b| b.to_string()).unwrap_or_else(|| "".to_string()),
-            submission.successful_compiles_task2.map(|b| b.to_string()).unwrap_or_else(|| "".to_string()),
-        );
-        file.write_all(line.as_bytes())?;
-    }
-
-    // Return an empty Ok variant to indicate success
-    Ok(())
-}
 
 pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &str) -> Result<(), Box<dyn Error>> {
     let workbook = Workbook::new(file_path)?;
     let mut sheet =  workbook.add_worksheet(None)?;
 
     sheet.set_column(0, 0, 25.0, None)?;
-    sheet.set_column(1, 4, 10.0, None)?;
-    sheet.set_column(5, 6, 17.0, None)?;
-    sheet.set_column(7, 13, 27.0, None)?;
+    sheet.set_column(1, 5, 10.0, None)?;
+    sheet.set_column(6, 7, 17.0, None)?;
+    sheet.set_column(8, 14, 27.0, None)?;
 
     // Write the header row to the sheet
     let headers = ["student_folder", "git_repo", "cloned", "has_task1", "has_task2", "gcc_standard", "commits_task1", "commits_task2", 
@@ -54,7 +21,7 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
         .set_bold();
     let mut col = 0;
     for header in headers.iter() {
-        sheet.write_string(0, col, &header, Some(&header_format))?;
+        sheet.write_string(0, col, header, Some(&header_format))?;
         col += 1;
     }
 

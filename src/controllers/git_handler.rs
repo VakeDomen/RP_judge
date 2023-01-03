@@ -3,7 +3,7 @@ use crate::models::student_project::StudentProjectSubmission;
 use super::{validator::{check_dir_exists}, os_helper::{run_command, folder_names}};
 
 
-pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>) {
+pub fn clone_repos(submissions: &mut [StudentProjectSubmission]) {
     if let false = check_dir_exists("rp_workspace/sources") {
         println!("[GIT HANDLER] Error reading sources directory!");
         std::process::exit(1);
@@ -26,7 +26,7 @@ pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>) {
     }
 }
 
-pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
+pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
     if let false = check_dir_exists("rp_workspace/repos") {
         println!("[GIT HANDLER] Error reading repos directory!");
         std::process::exit(1);
@@ -139,7 +139,6 @@ fn save_compilation_results_to_submission(
             submission.all_commits_compile_task2 = Some(overall_compile); 
             submission.final_commit_compile_task2 = Some(last_compile);
             submission.successful_compiles_task2 = Some(successful_commits);
-            return;
         }
     }
 }
@@ -159,7 +158,7 @@ fn get_commits_from_submission(task: &str, submission: &mut StudentProjectSubmis
     None
 }
 
-pub fn extract_commits(submissions: &mut Vec<StudentProjectSubmission>) {
+pub fn extract_commits(submissions: &mut [StudentProjectSubmission]) {
     if let false = check_dir_exists("rp_workspace/repos") {
         println!("[GIT HANDLER] Error reading repos directory!");
         std::process::exit(1);
@@ -186,7 +185,7 @@ pub fn extract_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                 },
             }; 
             let commits = Some(command_output
-                .split("\n")
+                .split('\n')
                 .filter(|s| !s.is_empty())
                 .map(|s| s.to_string())
                 .collect()
@@ -207,12 +206,11 @@ fn save_commits_to_submission(submission: &mut StudentProjectSubmission, task: &
     if let Some(task2) = submission.has_task2.clone() {
         if task2 == task {
             submission.commits_task2 = commits;
-            return;
         }
     }
 }
 
-pub fn check_structure(submissions: &mut Vec<StudentProjectSubmission>) {
+pub fn check_structure(submissions: &mut [StudentProjectSubmission]) {
     if let false = check_dir_exists("rp_workspace/repos") {
         println!("[GIT HANDLER] Error reading repos directory!");
         std::process::exit(1);

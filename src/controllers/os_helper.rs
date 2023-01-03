@@ -9,7 +9,7 @@ pub fn run_command(command: &str) -> Result<String, Error> {
         Ok(p) => p,
         Err(e) => return Err(Error::new(
             ErrorKind::Other, 
-            format!("[OS HELPER] Something went wrong with running command: {}", e.to_string()))
+            format!("[OS HELPER] Something went wrong with running command: {}", e))
         ),
     };
     match output.status.success() {

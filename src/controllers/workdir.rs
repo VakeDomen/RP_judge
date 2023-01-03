@@ -86,7 +86,7 @@ pub fn move_sources(sources: Vec<FilePath>) {
                 };
                 // remove spaces from all extracted sources
                 for folder_name in folders.iter() {
-                    let no_space_path = folder_name.replace(" ", "_");
+                    let no_space_path = folder_name.replace(' ', "_");
                     if let Err(e) = run_command(&format!("mv \"rp_workspace/tmp/{}\" rp_workspace/tmp/{}", folder_name, no_space_path)) {
                         println!("[WD] Error renaming source in sources directory to remove spaces!\n{:#?}", e);
                         std::process::exit(1);
@@ -94,12 +94,11 @@ pub fn move_sources(sources: Vec<FilePath>) {
                 }
 
                 // move extracted sourcs from tmp to sources folder
-                if let Err(e) = run_command(&format!("mv rp_workspace/tmp/* rp_workspace/sources/")) {
+                if let Err(e) = run_command("mv rp_workspace/tmp/* rp_workspace/sources/") {
                     println!("[WD] Error moving extracted sources from temporary folder to sources folder!\n{:#?}", e);
                     std::process::exit(1);
                 };
             },
-            _ => continue,
         }
     }
 }
@@ -146,7 +145,7 @@ fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSu
                 continue;
             }
         };
-        subm.git_repo = Some(format!("{}.git", capture[1].replace(".git", "").to_string()));
+        subm.git_repo = Some(format!("{}.git", capture[1].replace(".git", "")));
         submissions.push(subm);
     }
     submissions
