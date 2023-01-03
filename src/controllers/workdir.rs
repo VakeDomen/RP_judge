@@ -117,7 +117,7 @@ pub fn extract_submissions_from_sources() -> Vec<StudentProjectSubmission> {
 
 fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSubmission> {
     let mut submissions = vec![];
-    let re = Regex::new(r#"<a href="(https://(github|gitlab)\.com/[^"]+)">"#).unwrap();
+    let re = Regex::new(r#"(https?://(?:www\.)?(?:gitlab|github)\.com/[-a-zA-Z0-9@:%._\+~#=]{2,256}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*))"#).unwrap();
     for folder in folder_names.iter() {
         let mut subm = StudentProjectSubmission::new(folder.clone());
 
@@ -146,7 +146,7 @@ fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSu
                 continue;
             }
         };
-        subm.git_repo = Some(format!("{}.git", capture[1].to_string()));
+        subm.git_repo = Some(format!("{}.git", capture[1].replace(".git", "").to_string()));
         submissions.push(subm);
     }
     submissions

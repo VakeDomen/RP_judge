@@ -72,14 +72,25 @@ pub fn compile_commits(submissions: &mut Vec<StudentProjectSubmission>) {
                 }; 
 
                 // compile with gcc
-                let command_output = match run_command(format!("gcc ./rp_workspace/repos/{}/{}/main.c", student_folder, task).as_str()) {
-                    Ok(t) => t,
-                    Err(_) => {
-                        last_compile = false;
-                        overall_compile = false;
-                        continue;
-                    },
-                }; 
+                let standards = ["c99", "c90", "c89", "c11", "c17"];
+
+                let mut command_output = "".to_string();
+                
+                for standard in standards.iter() {
+
+                    match run_command(format!("gcc -std={} ./rp_workspace/repos/{}/{}/main.c", standard, student_folder, task).as_str()) {
+                        Ok(t) => {
+                            command_output = t;
+                            if command_output.is_empty() {
+                                last_compile = true;
+                                break;
+                            } else {
+                                last_compile = false;
+                            }
+                        },
+                        Err(_) => last_compile = false,
+                    }; 
+                }
 
                 // if no warrnings/errors => no output => successful compile
                 if command_output.is_empty() {
