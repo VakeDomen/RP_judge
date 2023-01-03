@@ -71,7 +71,7 @@ pub fn move_sources(sources: Vec<FilePath>) {
                 };
 
                 // extract zip into tmp folder
-                if let Err(e) = run_command(&format!("unzip \"{}\" -d rp_workspace/tmp/", path)) {
+                if let Err(e) = run_command(&format!("7z x -o./rp_workspace/tmp/ \"{}\"", path)) {
                     println!("[WD] Error extracting source into sources directory!\n{:#?}", e);
                     std::process::exit(1);
                 };
