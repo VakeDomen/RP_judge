@@ -1,4 +1,4 @@
-use std::{io::{Error, ErrorKind, self}, process::Command, fs};
+use std::{io::{Error, ErrorKind, self}, process::Command, fs, ffi::OsString};
 
 pub fn run_command(command: &str) -> Result<String, Error> {
     let output =  match Command::new("sh")
@@ -27,7 +27,7 @@ pub fn create_workdir() -> Result<String, Error>  {
 }
 
 pub fn folder_names(path: &str) -> Result<Vec<String>, io::Error> {
-    Ok(fs::read_dir(path)
+    Ok(fs::read_dir(OsString::from(path))
         .unwrap()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().unwrap().is_dir())

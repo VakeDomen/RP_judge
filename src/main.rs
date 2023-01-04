@@ -22,20 +22,20 @@ fn main() {
     println!("\tDone!");
 
     print!("[MAIN] Moving sources to workspace...");
-    move_sources(file_paths);
+    move_sources(&file_paths);
     println!("\tDone!");
 
     print!("[MAIN] Extracting git repo links from submissions...");
     let mut submissions: Vec<StudentProjectSubmission> = extract_submissions_from_sources();
     println!("\tDone!");
     
-    if submissions.is_empty() {
-        println!("[MAIN] No valid submissions to check!");
-        std::process::exit(0);
-    }
+    // if submissions.is_empty() {
+    //     println!("[MAIN] No valid submissions to check!");
+    //     std::process::exit(0);
+    // }
     
     print!("[MAIN] Cloning git repos...");
-    clone_repos(&mut submissions);
+    clone_repos(&mut submissions, &file_paths);
     println!("\tDone!");
     
     print!("[MAIN] Checking git repo structure...");

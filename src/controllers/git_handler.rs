@@ -1,9 +1,8 @@
-use crate::models::student_project::StudentProjectSubmission;
-
+use crate::models::{student_project::StudentProjectSubmission, file_path::FilePath};
 use super::{validator::{check_dir_exists}, os_helper::{run_command, folder_names}};
 
 
-pub fn clone_repos(submissions: &mut [StudentProjectSubmission]) {
+pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>, sources: &Vec<FilePath>) {
     if let false = check_dir_exists("rp_workspace/sources") {
         println!("[GIT HANDLER] Error reading sources directory!");
         std::process::exit(1);
@@ -22,6 +21,37 @@ pub fn clone_repos(submissions: &mut [StudentProjectSubmission]) {
                 continue;
             }; 
             submission.cloned = true;
+        }
+    }
+
+    // hadle jordan source
+    let mut jordan_link = "".to_string();
+    for source in sources.iter() {
+        match source {
+            FilePath::GitHub(link) => jordan_link = link.to_string(),
+            _ => (),
+        };
+    }
+
+
+    if !jordan_link.is_empty() {
+        // clone master repo
+        if let Err(e) = run_command(format!("git clone {} ./rp_workspace/repos/jrdndj/", jordan_link).as_str()) {
+            println!("[GIT HANDLER] Error cloning git repo({}):\n{:#?}",jordan_link, e);
+        }; 
+
+        // extract student folders
+        let folders = match folder_names(&format!("./rp_workspace/repos/jrdndj/AY 2022-2023/Student Works")) {
+            Ok(f) => f,
+            Err(e) => {
+                println!("[WD] Error checking repository folder structure!\n{:#?}", e);
+                std::process::exit(1);
+            }
+        };
+        for folder in folders.into_iter() {
+            let mut submission = StudentProjectSubmission::new(format!("jrdndj/AY 2022-2023/Student Works/{}", folder));
+            submission.cloned = true;
+            submissions.push(submission);
         }
     }
 }
@@ -216,13 +246,11 @@ pub fn check_structure(submissions: &mut [StudentProjectSubmission]) {
         std::process::exit(1);
     }
 
-    
     for submission in submissions.iter_mut() {
         if !submission.cloned {
             continue;
         }
         // validate_and_fix_task_names(&format!("./rp_workspace/repos/{}", submission.student_folder));
-
         let folders = match folder_names(&format!("./rp_workspace/repos/{}", submission.student_folder)) {
             Ok(f) => f,
             Err(e) => {
@@ -233,6 +261,8 @@ pub fn check_structure(submissions: &mut [StudentProjectSubmission]) {
         let accepted_folder_names_task1 = ["Task1", "task1", "1task", "1Task", "task_1", "Task_1"];
         let accepted_folder_names_task2 = ["Task2", "task2", "2task", "2Task", "task_2", "Task_2"];
     
+        println!("{:#?}", folders);
+
         submission.has_task1 = folders
             .iter()
             .find(|folder| accepted_folder_names_task1.contains(&folder.as_str()))

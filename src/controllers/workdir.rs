@@ -46,7 +46,7 @@ pub fn setup_workdir() {
     };
 }
 
-pub fn move_sources(sources: Vec<FilePath>) {
+pub fn move_sources(sources: &Vec<FilePath>) {
     if sources.is_empty() {
         println!("[WD] No sources!\nPlease specify source file paths in arguments of the program. You can point to the *.zip file downloaded from Moodle or the folder that contains files and folders extracted from the zip.");
         std::process::exit(0);
@@ -99,6 +99,7 @@ pub fn move_sources(sources: Vec<FilePath>) {
                     std::process::exit(1);
                 };
             },
+            FilePath::GitHub(_) => (),
         }
     }
 }

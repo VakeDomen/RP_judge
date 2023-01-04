@@ -19,7 +19,8 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
     let header_format = workbook
         .add_format()
         .set_bold();
-    let mut col = 0;
+
+        let mut col = 0;
     for header in headers.iter() {
         sheet.write_string(0, col, header, Some(&header_format))?;
         col += 1;
@@ -56,15 +57,16 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
                     Some(&header_format)
                 )?;
             }
-            
 
             if *header == "git_repo" {
-                sheet.write_url(
-                    row.try_into().unwrap(), 
-                    column,
-                    &submission.git_repo.clone().unwrap_or_else(|| "".to_string()), 
-                    Some(&url_format)
-                )?;
+                if let Some(repo) = &submission.git_repo {
+                    sheet.write_url(
+                        row.try_into().unwrap(), 
+                        column,
+                        repo, 
+                        Some(&url_format)
+                    )?;
+                }
             }
 
             if *header == "cloned" {
@@ -80,7 +82,7 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
                     format
                 )?;
             }
-            
+
             if *header == "gcc_standard" {
                 sheet.write_string(
                     row.try_into().unwrap(), 
@@ -130,9 +132,16 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
                         val.as_str(), 
                         Some(&header_format)
                     )?;
+                } else {
+                    sheet.write_boolean(
+                        row.try_into().unwrap(), 
+                        headers.iter().position(|&r| r == *header).unwrap().try_into().unwrap(), 
+                        false, 
+                        Some(&red_format)
+                    )?;
                 }
             }
-
+            
             if *header == "has_task2" {
                 if let Some(val) = submission.has_task2.clone() {
                     sheet.write_string(
@@ -140,6 +149,13 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
                         headers.iter().position(|&r| r == *header).unwrap().try_into().unwrap(), 
                         val.as_str(), 
                         Some(&header_format)
+                    )?;
+                } else {
+                    sheet.write_boolean(
+                        row.try_into().unwrap(), 
+                        headers.iter().position(|&r| r == *header).unwrap().try_into().unwrap(), 
+                        false, 
+                        Some(&red_format)
                     )?;
                 }
             }
@@ -239,7 +255,7 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
                     )?;
                 }
             }
-            
+
             col += 1;
         }
 

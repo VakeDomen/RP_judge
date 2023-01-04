@@ -1,4 +1,5 @@
 #[derive(Debug)]
 pub enum FilePath {
-    Zip(String)
+    Zip(String),
+    GitHub(String),
 }
