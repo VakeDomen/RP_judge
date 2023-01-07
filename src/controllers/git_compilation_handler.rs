@@ -31,7 +31,10 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
         for task in tasks_to_check.iter() {
             // clone string so we can borrow submission mutably
             let student_folder = submission.student_folder.clone();
-
+            let task_main_file = match get_submission_main_file(submission, &task) {
+                Some(main) => main,
+                None => continue,
+            };
             // fetch commits of submission
             // if there are none, continue to next task/submisssion
             let commits  =  match get_commits_from_submission(task, submission) {
@@ -67,7 +70,7 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
                 let mut command_output = "".to_string();
                 
                 for standard in standards.iter() {
-
+                    
                     match run_command(format!("gcc -std={} ./rp_workspace/repos/{}/{}/main.c", standard, student_folder.replace(" ", "\\ "), task).as_str()) {
                         Ok(t) => {
                             command_output = t;
@@ -104,6 +107,22 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
             }
         }
     }
+}
+
+fn get_submission_main_file(submission: &mut StudentProjectSubmission, task: &str) -> Option<String> {
+    if let Some(task1) = submission.has_task1.clone() {
+        if task1 == task {
+            return submission.task1_main.clone();
+        }
+    }
+
+    if let Some(task2) = submission.has_task2.clone() {
+        if task2 == task {
+            return submission.task2_main.clone();
+        }
+    }
+    
+    None
 }
 
 fn save_compilation_results_to_submission(

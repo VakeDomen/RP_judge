@@ -1,6 +1,6 @@
 use crate::models::student_project::StudentProjectSubmission;
 
-use super::{validator::check_dir_exists, os_helper::{run_command, folder_names}};
+use super::{validator::{check_dir_exists, find_main_file}, os_helper::{run_command, folder_names}};
 
 
 pub fn get_commits_from_submission(task: &str, submission: &mut StudentProjectSubmission) -> Option<Vec<String>> {
@@ -115,13 +115,23 @@ pub fn check_structure(submissions: &mut [StudentProjectSubmission]) {
             .iter()
             .find(|folder| accepted_folder_names_task1.contains(&folder.as_str()))
             .map(|name| name.to_string());
+
+        if let Some(task) = &submission.has_task1 {
+            submission.task1_main = find_main_file(&format!("./rp_workspace/repos/{}/{}", submission.student_folder, task));
+        }
         submission.has_task2 = folders
             .iter()
             .find(|folder| accepted_folder_names_task2.contains(&folder.as_str()))
             .map(|name| name.to_string());
+        if let Some(task) = &submission.has_task2 {
+            submission.task2_main = find_main_file(&format!("./rp_workspace/repos/{}/{}", submission.student_folder, task));
+        }
 
-        if let Some(task) = &submission.has_task1{
-            println!("./rp_workspace/repos/{}/{}/main.c", submission.student_folder, task);
+        
+        if let Some(task) = &submission.has_task1 {
+            if let Some(main) = &submission.task1_main  {
+                println!("./rp_workspace/repos/{}/{}/{}", submission.student_folder, task, main);
+            }
         }
     }
 }

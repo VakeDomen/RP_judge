@@ -1,7 +1,7 @@
 use std::{io::{Error, ErrorKind, self}, process::Command, fs, ffi::OsString};
 
 pub fn run_command(command: &str) -> Result<String, Error> {
-    println!("{}", command);
+    // println!("{}", command);
     let output =  match Command::new("sh")
         .arg("-c")
         .arg(command)
