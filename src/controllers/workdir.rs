@@ -119,7 +119,7 @@ fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSu
     let mut submissions = vec![];
     let re = Regex::new(r#"(https?://(?:www\.)?(?:gitlab|github)\.com/[-a-zA-Z0-9@:%._\+~#=]{2,256}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*))"#).unwrap();
     for folder in folder_names.iter() {
-        let mut subm = StudentProjectSubmission::new(folder.clone());
+        let mut subm = StudentProjectSubmission::new(folder.clone(), false);
 
         // Construct the path to the HTML file
         let path = format!("./rp_workspace/sources/{}/onlinetext.html", folder);
@@ -146,14 +146,20 @@ fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSu
                 continue;
             }
         };
+        
         let mut captured_link_fragments = capture[1].split("/-/tree");
-        let captured_link = captured_link_fragments.nth(0);
-        if let Some(link) = captured_link {
-            subm.git_repo = Some(format!("{}.git", link.replace(".git", "")));
-            submissions.push(subm);
-        } else {
+        let link_fragment = captured_link_fragments.nth(0);
+        if let None = link_fragment {
+            continue;
+        }
+        let captured_link = link_fragment.unwrap().split("/tree").nth(0);
+        if let None = captured_link {
             println!("[GIT EXTRACTION] Error extracting and parsing link: {:#?}", captured_link);
         }
+
+        subm.git_repo = Some(format!("{}.git", captured_link.unwrap().replace(".git", "")));
+        submissions.push(subm);
+        
     }
     submissions
 }
