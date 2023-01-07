@@ -17,15 +17,15 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let file_paths: Vec<FilePath> = parse_file_args(args);
     
-    print!("[MAIN] Setting up workspace...");
+    println!("[MAIN] Setting up workspace...");
     setup_workdir();
     println!("\tDone!");
 
-    print!("[MAIN] Moving sources to workspace...");
+    println!("[MAIN] Moving sources to workspace...");
     move_sources(&file_paths);
     println!("\tDone!");
 
-    print!("[MAIN] Extracting git repo links from submissions...");
+    println!("[MAIN] Extracting git repo links from submissions...");
     let mut submissions: Vec<StudentProjectSubmission> = extract_submissions_from_sources();
     println!("\tDone!");
     
@@ -34,23 +34,23 @@ fn main() {
     //     std::process::exit(0);
     // }
     
-    print!("[MAIN] Cloning git repos...");
+    println!("[MAIN] Cloning git repos...");
     clone_repos(&mut submissions, &file_paths);
     println!("\tDone!");
     
-    print!("[MAIN] Checking git repo structure...");
+    println!("[MAIN] Checking git repo structure...");
     check_structure(&mut submissions);
     println!("\tDone!");
     
-    print!("[MAIN] Extracting commits...");
+    println!("[MAIN] Extracting commits...");
     extract_commits(&mut submissions);
     println!("\tDone!");
 
-    print!("[MAIN] Compiling commits...");
+    println!("[MAIN] Compiling commits...");
     compile_commits(&mut submissions);
     println!("\tDone!");
 
-    print!("[MAIN] Exporting submissions...");
+    println!("[MAIN] Exporting submissions...");
     match export_to_xlsx(submissions, "./rp_workspace/results.xlsx") {
         Ok(_) => println!("\tDone!"),
         Err(e) => println!("[MAIN] Error! Something went wrong exporting results: {:#?}", e),

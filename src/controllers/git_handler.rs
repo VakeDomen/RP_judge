@@ -16,7 +16,7 @@ pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>, sources: &Ve
         // if submission has a repo
         if let Some(repo) = &submission.git_repo {
             // try to clone it
-            if let Err(e) = run_command(format!("git clone {} ./rp_workspace/repos/{}", repo, submission.student_folder).as_str()) {
+            if let Err(e) = run_command(format!("git clone {} ./rp_workspace/repos/{}", repo, submission.student_folder.replace(" ", "\\ ")).as_str()) {
                 println!("[GIT HANDLER] Error cloning git repo({}):\n{:#?}",repo, e);
                 continue;
             }; 
@@ -107,8 +107,8 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
             let mut successful_commits = 0;
             for commit_string in commits.iter().rev() {
                 // change git repo to sprcified commit
-                if let Err(e) = run_command(format!("git -C ./rp_workspace/repos/{} checkout {}", student_folder, commit_string).as_str()) {
-                    println!("[GIT HANDLER] Error switching commits on repo({}): {:#?}", student_folder, e);
+                if let Err(e) = run_command(format!("git -C ./rp_workspace/repos/{} checkout {}", student_folder.replace(" ", "\\ "), commit_string).as_str()) {
+                    println!("[GIT HANDLER] Error switching commits on repo({}): {:#?}", student_folder.replace(" ", "\\ "), e);
                     continue;
                 }; 
 
@@ -119,7 +119,7 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
                 
                 for standard in standards.iter() {
 
-                    match run_command(format!("gcc -std={} ./rp_workspace/repos/{}/{}/main.c", standard, student_folder, task).as_str()) {
+                    match run_command(format!("gcc -std={} ./rp_workspace/repos/{}/{}/main.c", standard, student_folder.replace(" ", "\\ "), task).as_str()) {
                         Ok(t) => {
                             command_output = t;
                             if command_output.is_empty() {
@@ -194,7 +194,11 @@ pub fn extract_commits(submissions: &mut [StudentProjectSubmission]) {
         std::process::exit(1);
     }
     for submission in submissions.iter_mut() {
-        
+        if !submission.cloned {
+            continue;
+        }
+
+
         let mut tasks_to_check = vec![];
         // find task 1 name
         if let Some(t1) = submission.has_task1.clone() {
@@ -205,9 +209,24 @@ pub fn extract_commits(submissions: &mut [StudentProjectSubmission]) {
         if let Some(t2) = submission.has_task2.clone() {
             tasks_to_check.push(t2);
         }
+
+        let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\"", submission.student_folder.replace(" ", "\\ ")).as_str()) {
+            Ok(t) => t,
+            Err(e) => {
+                println!("[GIT HANDLER] Error checking commits for git repo({}):\n{:#?}",submission.student_folder.replace(" ", "\\ "), e);
+                std::process::exit(1);
+            },
+        }; 
+        submission.total_commits = Some(command_output
+            .split('\n')
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>().len() as i32
+        );
+
         for task in tasks_to_check.iter() {
             // check commits for task 1
-            let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\" -- {}", submission.student_folder, task).as_str()) {
+            let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\" -- {}", submission.student_folder.replace(" ", "\\ "), task).as_str()) {
                 Ok(t) => t,
                 Err(e) => {
                     println!("[GIT HANDLER] Error checking commits for git repo({}):\n{:#?}",submission.student_folder, e);
@@ -258,10 +277,9 @@ pub fn check_structure(submissions: &mut [StudentProjectSubmission]) {
                 std::process::exit(1);
             }
         };
-        let accepted_folder_names_task1 = ["Task1", "task1", "1task", "1Task", "task_1", "Task_1"];
-        let accepted_folder_names_task2 = ["Task2", "task2", "2task", "2Task", "task_2", "Task_2"];
+        let accepted_folder_names_task1 = ["Task1", "task1", "1task", "1Task", "task_1", "Task_1", "Task 1", "task 1"];
+        let accepted_folder_names_task2 = ["Task2", "task2", "2task", "2Task", "task_2", "Task_2", "Task 2", "task 2"];
     
-        println!("{:#?}", folders);
 
         submission.has_task1 = folders
             .iter()
@@ -271,5 +289,9 @@ pub fn check_structure(submissions: &mut [StudentProjectSubmission]) {
             .iter()
             .find(|folder| accepted_folder_names_task2.contains(&folder.as_str()))
             .map(|name| name.to_string());
+
+        if let Some(task) = &submission.has_task1{
+            println!("./rp_workspace/repos/{}/{}/main.c", submission.student_folder, task);
+        }
     }
 }

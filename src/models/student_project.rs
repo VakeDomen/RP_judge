@@ -6,6 +6,7 @@ pub struct StudentProjectSubmission {
 
     pub gcc_standard: Option<String>,
 
+    pub total_commits: Option<i32>,
     pub commits_task1: Option<Vec<String>>,
     pub commits_task2: Option<Vec<String>>,
     pub has_task1: Option<String>,
@@ -25,6 +26,7 @@ impl StudentProjectSubmission {
             git_repo: None, 
             cloned: false, 
             gcc_standard: None,
+            total_commits: None,
             commits_task1: None, 
             commits_task2: None, 
             has_task1: None, 

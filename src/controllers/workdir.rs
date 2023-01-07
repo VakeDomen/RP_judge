@@ -146,8 +146,14 @@ fn extract_repos_form_folders(folder_names: Vec<String>) -> Vec<StudentProjectSu
                 continue;
             }
         };
-        subm.git_repo = Some(format!("{}.git", capture[1].replace(".git", "")));
-        submissions.push(subm);
+        let mut captured_link_fragments = capture[1].split("/-/tree");
+        let captured_link = captured_link_fragments.nth(0);
+        if let Some(link) = captured_link {
+            subm.git_repo = Some(format!("{}.git", link.replace(".git", "")));
+            submissions.push(subm);
+        } else {
+            println!("[GIT EXTRACTION] Error extracting and parsing link: {:#?}", captured_link);
+        }
     }
     submissions
 }
