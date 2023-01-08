@@ -71,7 +71,7 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
                 
                 for standard in standards.iter() {
                     
-                    match run_command(format!("gcc -std={} ./rp_workspace/repos/{}/{}/main.c", standard, student_folder.replace(" ", "\\ "), task).as_str()) {
+                    match run_command(format!("gcc -std={} ./rp_workspace/repos/{}/{}/{}", standard, student_folder.replace(" ", "\\ "), task, task_main_file).as_str()) {
                         Ok(t) => {
                             command_output = t;
                             if command_output.is_empty() {
@@ -95,12 +95,10 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
                 }
                 was_checked = true;
 
-                //checkout back to latest if on jordan's repo
-                if submission.jordan {
-                    if let Err(e) = run_command(format!("git -C ./rp_workspace/repos/{} checkout master", student_folder.replace(" ", "\\ ")).as_str()) {
-                        println!("[GIT HANDLER] Error switching commits on repo back to latest master ({}): {:#?}", student_folder.replace(" ", "\\ "), e);
-                    };
-                }
+                //checkout back to latest if on jordan's   
+                if let Err(e) = run_command(format!("git -C ./rp_workspace/repos/{} checkout -", student_folder.replace(" ", "\\ ")).as_str()) {
+                    println!("[GIT HANDLER] Error switching commits on repo back to latest master ({}): {:#?}", student_folder.replace(" ", "\\ "), e);
+                };
             }
             if was_checked {
                 save_compilation_results_to_submission(submission, task, last_compile, overall_compile, successful_commits);
@@ -121,7 +119,7 @@ fn get_submission_main_file(submission: &mut StudentProjectSubmission, task: &st
             return submission.task2_main.clone();
         }
     }
-    
+
     None
 }
 

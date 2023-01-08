@@ -1,6 +1,6 @@
 use crate::models::student_project::StudentProjectSubmission;
 
-use super::{validator::{check_dir_exists, find_main_file}, os_helper::{run_command, folder_names}};
+use super::{validator::{check_dir_exists, find_main_file, find_accepted_folder}, os_helper::run_command};
 
 
 pub fn get_commits_from_submission(task: &str, submission: &mut StudentProjectSubmission) -> Option<Vec<String>> {
@@ -99,39 +99,33 @@ pub fn check_structure(submissions: &mut [StudentProjectSubmission]) {
         if !submission.cloned {
             continue;
         }
-        // validate_and_fix_task_names(&format!("./rp_workspace/repos/{}", submission.student_folder));
-        let folders = match folder_names(&format!("./rp_workspace/repos/{}", submission.student_folder)) {
-            Ok(f) => f,
-            Err(e) => {
-                println!("[WD] Error checking repository folder structure!\n{:#?}", e);
-                std::process::exit(1);
-            }
-        };
+
         let accepted_folder_names_task1 = ["Task1", "task1", "1task", "1Task", "task_1", "Task_1", "Task 1", "task 1"];
         let accepted_folder_names_task2 = ["Task2", "task2", "2task", "2Task", "task_2", "Task_2", "Task 2", "task 2"];
     
-
-        submission.has_task1 = folders
-            .iter()
-            .find(|folder| accepted_folder_names_task1.contains(&folder.as_str()))
-            .map(|name| name.to_string());
+        submission.has_task1 = find_accepted_folder(
+            &format!("./rp_workspace/repos/{}", submission.student_folder), 
+            &accepted_folder_names_task1
+        );
+        
+        submission.has_task2 = find_accepted_folder(
+            &format!("./rp_workspace/repos/{}", submission.student_folder), 
+            &accepted_folder_names_task2
+        );
 
         if let Some(task) = &submission.has_task1 {
             submission.task1_main = find_main_file(&format!("./rp_workspace/repos/{}/{}", submission.student_folder, task));
         }
-        submission.has_task2 = folders
-            .iter()
-            .find(|folder| accepted_folder_names_task2.contains(&folder.as_str()))
-            .map(|name| name.to_string());
         if let Some(task) = &submission.has_task2 {
             submission.task2_main = find_main_file(&format!("./rp_workspace/repos/{}/{}", submission.student_folder, task));
         }
-
         
-        if let Some(task) = &submission.has_task1 {
-            if let Some(main) = &submission.task1_main  {
+        if let Some(task) = &submission.has_task2 {
+            if let Some(main) = &submission.task2_main  {
                 println!("./rp_workspace/repos/{}/{}/{}", submission.student_folder, task, main);
             }
         }
     }
 }
+
+
