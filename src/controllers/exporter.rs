@@ -1,4 +1,5 @@
 use std::error::Error;
+use chrono::Datelike;
 use xlsxwriter::{Workbook, FormatUnderline, FormatColor};
 
 use crate::models::student_project::StudentProjectSubmission;
@@ -13,7 +14,7 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
     sheet.set_column(8, 14, 27.0, None)?;
 
     // Write the header row to the sheet
-    let headers = ["student_folder", "git_repo", "cloned", "has_task1", "has_task2", "total_commits", "gcc_standard", "commits_task1", "commits_task2", 
+    let headers = ["student_folder", "git_repo", "cloned", "has_task1", "has_task2", "total_commits", "last_commit", "gcc_standard", "commits_task1", "commits_task2", 
     "all_commits_compile_task1", "all_commits_compile_task2", "final_commit_compile_task1", 
     "final_commit_compile_task2", "successful_compiles_task1", "successful_compiles_task2"];
     let header_format = workbook
@@ -81,6 +82,26 @@ pub fn export_to_xlsx(submissions: Vec<StudentProjectSubmission>, file_path: &st
                     submission.cloned, 
                     format
                 )?;
+            }
+
+            if *header == "last_commit" {
+                let fmt = if let Some(date) = submission.last_commit_date {
+                    if date.day() > 6 && date.month() == 1 {
+                        Some(&red_format)
+                    } else {
+                        Some(&header_format)
+                    }
+                } else {
+                    Some(&header_format)
+                };
+                if let Some(date) = submission.last_commit_date {
+                    sheet.write_string(
+                        row.try_into().unwrap(), 
+                        column,
+                        &date.to_string().clone(), 
+                        fmt
+                    )?;
+                }
             }
 
             if *header == "gcc_standard" {

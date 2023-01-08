@@ -1,4 +1,4 @@
-use crate::models::student_project::StudentProjectSubmission;
+use crate::{models::student_project::StudentProjectSubmission, controllers::parser::escape};
 
 use super::{validator::{check_dir_exists, tasks_to_check}, git_commit_handler::get_commits_from_submission, os_helper::run_command};
 
@@ -46,8 +46,12 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
             let mut was_checked = false;
             for commit_string in commits.iter().rev() {
                 // change git repo to sprcified commit
-                if let Err(e) = run_command(format!("git -C ./rp_workspace/repos/{} checkout {}", student_folder.replace(" ", "\\ "), commit_string).as_str()) {
-                    println!("[GIT HANDLER] Error switching commits on repo({}): {:#?}", student_folder.replace(" ", "\\ "), e);
+                if let Err(e) = run_command(format!(
+                    "git -C ./rp_workspace/repos/{} checkout {}", 
+                    escape(&student_folder), 
+                    commit_string
+                ).as_str()) {
+                    println!("[GIT HANDLER] Error switching commits on repo({}): {:#?}", escape(&student_folder), e);
                     continue;
                 }; 
 
@@ -57,7 +61,13 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
                 let mut command_output = "".to_string();
                 
                 for standard in standards.iter() {
-                    match run_command(format!("gcc -std={} ./rp_workspace/repos/{}/{}/{}", standard, student_folder.replace(" ", "\\ "), task, task_main_file).as_str()) {
+                    match run_command(format!(
+                        "gcc -std={} ./rp_workspace/repos/{}/{}/{}", 
+                        standard, 
+                        escape(&student_folder), 
+                        escape(&task), 
+                        escape(&task_main_file)
+                    ).as_str()) {
                         Ok(t) => {
                             command_output = t;
                             if command_output.is_empty() {
@@ -82,8 +92,11 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
                 was_checked = true;
 
                 //checkout back to latest if on jordan's   
-                if let Err(e) = run_command(format!("git -C ./rp_workspace/repos/{} checkout -", student_folder.replace(" ", "\\ ")).as_str()) {
-                    println!("[GIT HANDLER] Error switching commits on repo back to latest master ({}): {:#?}", student_folder.replace(" ", "\\ "), e);
+                if let Err(e) = run_command(format!(
+                    "git -C ./rp_workspace/repos/{} checkout -", 
+                    escape(&student_folder)
+                ).as_str()) {
+                    println!("[GIT HANDLER] Error switching commits on repo back to latest master ({}): {:#?}", escape(&student_folder), e);
                 };
             }
             if was_checked {

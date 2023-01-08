@@ -1,5 +1,5 @@
 use crate::models::{student_project::StudentProjectSubmission, file_path::FilePath};
-use super::{validator::{check_dir_exists}, os_helper::{run_command, folder_names}};
+use super::{validator::{check_dir_exists}, os_helper::{run_command, folder_names}, parser::escape};
 
 
 pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>, sources: &Vec<FilePath>) {
@@ -16,7 +16,7 @@ pub fn clone_repos(submissions: &mut Vec<StudentProjectSubmission>, sources: &Ve
         // if submission has a repo
         if let Some(repo) = &submission.git_repo {
             // try to clone it
-            if let Err(e) = run_command(format!("git clone {} ./rp_workspace/repos/{}", repo, submission.student_folder.replace(" ", "\\ ")).as_str()) {
+            if let Err(e) = run_command(format!("git clone {} ./rp_workspace/repos/{}", repo, escape(&submission.student_folder)).as_str()) {
                 println!("[GIT HANDLER] Error cloning git repo({}):\n{:#?}",repo, e);
                 continue;
             }; 

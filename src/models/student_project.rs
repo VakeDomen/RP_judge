@@ -1,3 +1,5 @@
+use chrono::{NaiveDateTime};
+
 #[derive(Debug)] 
 pub struct StudentProjectSubmission {
     pub student_folder: String,
@@ -6,6 +8,7 @@ pub struct StudentProjectSubmission {
     pub jordan: bool,
 
     pub gcc_standard: Option<String>,
+    pub last_commit_date: Option<NaiveDateTime>,
 
     pub total_commits: Option<i32>,
     pub commits_task1: Option<Vec<String>>,
@@ -30,6 +33,7 @@ impl StudentProjectSubmission {
             cloned: false, 
             jordan: jordan,
             gcc_standard: None,
+            last_commit_date: None,
             total_commits: None,
             commits_task1: None, 
             commits_task2: None, 

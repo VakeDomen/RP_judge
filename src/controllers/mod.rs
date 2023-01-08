@@ -6,3 +6,4 @@ pub mod git_clone_handler;
 pub mod exporter;
 pub mod git_commit_handler;
 pub mod git_compilation_handler;
+pub mod moss_handler;

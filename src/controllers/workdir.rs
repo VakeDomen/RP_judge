@@ -44,6 +44,22 @@ pub fn setup_workdir() {
         println!("[WD] Error clearing repos directory!\n{:#?}", e);
         std::process::exit(1);
     };
+
+
+    // make moss folder
+    if let false = check_dir_exists("rp_workspace/moss") {
+        println!("[WD] Creating moss folder!");
+        if let Err(e) = run_command("mkdir rp_workspace/moss") {
+            println!("[WD] Error creating moss directory!\n{:#?}", e);
+            std::process::exit(1);
+        };
+    }
+
+    // clear repos folder
+    if let Err(e) = run_command("rm -rf rp_workspace/moss/*") {
+        println!("[WD] Error clearing moss directory!\n{:#?}", e);
+        std::process::exit(1);
+    };
 }
 
 pub fn move_sources(sources: &Vec<FilePath>) {

@@ -33,3 +33,10 @@ pub fn parse_file_args(args: Vec<String>) -> Vec<FilePath> {
     }
     files
 }
+
+pub fn escape(path: &String) -> String {
+    path
+        .replace(" ", "\\ ")
+        .replace("&", "\\&")
+        .replace("|", "\\|")
+}

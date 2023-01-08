@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use crate::models::student_project::StudentProjectSubmission;
 
-use super::os_helper::folder_names;
+use super::{os_helper::folder_names, parser::escape};
 
 pub fn check_workdir() -> bool {
     let wd_meta = match fs::metadata("./rp_workspace") {
@@ -67,7 +67,8 @@ pub fn find_accepted_folder(folder_name: &str, accepted_names: &[&str]) -> Optio
         }
 
         if let Some(found_folder) = find_accepted_folder(&format!("{}/{}", folder_name, folder), accepted_names) {
-            return Some(format!("{}/{}", folder, found_folder));
+            let path = format!("{}/{}", folder, found_folder);
+            return Some(path);
         }
     }
 

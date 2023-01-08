@@ -1,4 +1,6 @@
 use crate::models::student_project::StudentProjectSubmission;
+use chrono::{NaiveDateTime, Utc, DateTime};
+use super::parser::escape;
 
 use super::{validator::{check_dir_exists, find_main_file, find_accepted_folder, tasks_to_check}, os_helper::run_command};
 
@@ -27,11 +29,18 @@ pub fn extract_commits(submissions: &mut [StudentProjectSubmission]) {
         if !submission.cloned {
             continue;
         }
+        let path_string = submission.student_folder
+            .replace(" ", "\\ ")
+            .replace("&", "\\&")
+            .replace("|", "\\|");
 
-        let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\"", submission.student_folder.replace(" ", "\\ ")).as_str()) {
+        let command_output = match run_command(format!(
+            "git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\"", 
+            path_string
+        ).as_str()) {
             Ok(t) => t,
             Err(e) => {
-                println!("[GIT HANDLER] Error checking commits for git repo({}):\n{:#?}",submission.student_folder.replace(" ", "\\ "), e);
+                println!("[GIT HANDLER] Error checking overall commits for git repo({}):\n{:#?}",path_string, e);
                 std::process::exit(1);
             },
         }; 
@@ -44,7 +53,11 @@ pub fn extract_commits(submissions: &mut [StudentProjectSubmission]) {
 
         for task in tasks_to_check(submission).iter() {
             // check commits for task 1
-            let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\" -- {}", submission.student_folder.replace(" ", "\\ "), task).as_str()) {
+            let command_output = match run_command(format!(
+                "git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\" -- {}", 
+                escape(&submission.student_folder), 
+                escape(task)
+            ).as_str()) {
                 Ok(t) => t,
                 Err(e) => {
                     println!("[GIT HANDLER] Error checking commits for git repo({}):\n{:#?}",submission.student_folder, e);
@@ -102,10 +115,18 @@ pub fn check_structure(submissions: &mut [StudentProjectSubmission]) {
         );
 
         if let Some(task) = &submission.has_task1 {
-            submission.task1_main = find_main_file(&format!("./rp_workspace/repos/{}/{}", submission.student_folder, task));
+            submission.task1_main = find_main_file(&format!(
+                "./rp_workspace/repos/{}/{}", 
+                submission.student_folder, 
+                task
+            ));
         }
         if let Some(task) = &submission.has_task2 {
-            submission.task2_main = find_main_file(&format!("./rp_workspace/repos/{}/{}", submission.student_folder, task));
+            submission.task2_main = find_main_file(&format!(
+                "./rp_workspace/repos/{}/{}", 
+                submission.student_folder, 
+                task
+            ));
         }
         
         if let Some(task) = &submission.has_task2 {
@@ -121,8 +142,20 @@ pub fn check_latest_commit_date(submissions: &mut [StudentProjectSubmission]) {
         if !submission.cloned {
             continue;
         }
-    
         
-    
+        let command_output = match run_command(format!(
+            "git -C ./rp_workspace/repos/{} --no-pager log -i --format=%cd", 
+            escape(&submission.student_folder)
+        ).as_str()) {
+            Ok(t) => t,
+            Err(e) => {
+                println!("[GIT HANDLER] Error checking latest commit date for git repo({}):\n{:#?}", escape(&submission.student_folder), e);
+                std::process::exit(1);
+            },
+        }; 
+        let first_line = &command_output.lines().next();
+        if let Some(line) = first_line {
+            submission.last_commit_date = NaiveDateTime::parse_from_str(line, "%a %b %d %H:%M:%S %Y %z").ok();
+        }
     }
 }

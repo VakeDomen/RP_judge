@@ -5,9 +5,10 @@ use models::student_project::StudentProjectSubmission;
 
 use crate::controllers::exporter::export_to_xlsx;
 use crate::controllers::git_clone_handler::clone_repos;
-use crate::controllers::git_commit_handler::{extract_commits, check_structure};
+use crate::controllers::git_commit_handler::{extract_commits, check_structure, check_latest_commit_date};
 use crate::controllers::git_compilation_handler::compile_commits;
-use crate::controllers::parser::parse_file_args;
+use crate::controllers::moss_handler::setup_moss_folders;
+use crate::controllers::parser::{parse_file_args, escape};
 use crate::controllers::workdir::setup_workdir;
 use crate::models::file_path::FilePath;
 
@@ -43,9 +44,17 @@ fn main() {
     extract_commits(&mut submissions);
     println!("\tDone!");
 
+    println!("[MAIN] Extracting latest commit date...");
+    check_latest_commit_date(&mut submissions);
+    println!("\tDone!");
+
     println!("[MAIN] Compiling commits...");
     compile_commits(&mut submissions);
     println!("\tDone!");
+
+    println!("[MAIN] Preparing moss submission folders");
+    setup_moss_folders(&submissions);
+    println!("\nDone!");
 
     println!("[MAIN] Exporting submissions...");
     match export_to_xlsx(submissions, "./rp_workspace/results.xlsx") {
