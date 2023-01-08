@@ -1,6 +1,6 @@
 use crate::models::student_project::StudentProjectSubmission;
 
-use super::{validator::{check_dir_exists, find_main_file, find_accepted_folder}, os_helper::run_command};
+use super::{validator::{check_dir_exists, find_main_file, find_accepted_folder, tasks_to_check}, os_helper::run_command};
 
 
 pub fn get_commits_from_submission(task: &str, submission: &mut StudentProjectSubmission) -> Option<Vec<String>> {
@@ -28,18 +28,6 @@ pub fn extract_commits(submissions: &mut [StudentProjectSubmission]) {
             continue;
         }
 
-
-        let mut tasks_to_check = vec![];
-        // find task 1 name
-        if let Some(t1) = submission.has_task1.clone() {
-            tasks_to_check.push(t1);
-        }
-
-        // find task 2 name
-        if let Some(t2) = submission.has_task2.clone() {
-            tasks_to_check.push(t2);
-        }
-
         let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\"", submission.student_folder.replace(" ", "\\ ")).as_str()) {
             Ok(t) => t,
             Err(e) => {
@@ -54,7 +42,7 @@ pub fn extract_commits(submissions: &mut [StudentProjectSubmission]) {
             .collect::<Vec<String>>().len() as i32
         );
 
-        for task in tasks_to_check.iter() {
+        for task in tasks_to_check(submission).iter() {
             // check commits for task 1
             let command_output = match run_command(format!("git -C ./rp_workspace/repos/{}  --no-pager log --pretty=\"%h\" -- {}", submission.student_folder.replace(" ", "\\ "), task).as_str()) {
                 Ok(t) => t,
@@ -128,4 +116,13 @@ pub fn check_structure(submissions: &mut [StudentProjectSubmission]) {
     }
 }
 
-
+pub fn check_latest_commit_date(submissions: &mut [StudentProjectSubmission]) {
+    for submission in submissions.iter_mut() {
+        if !submission.cloned {
+            continue;
+        }
+    
+        
+    
+    }
+}

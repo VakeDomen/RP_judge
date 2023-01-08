@@ -1,6 +1,6 @@
 use crate::models::student_project::StudentProjectSubmission;
 
-use super::{validator::check_dir_exists, git_commit_handler::get_commits_from_submission, os_helper::run_command};
+use super::{validator::{check_dir_exists, tasks_to_check}, git_commit_handler::get_commits_from_submission, os_helper::run_command};
 
 
 pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
@@ -8,7 +8,6 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
         println!("[GIT HANDLER] Error reading repos directory!");
         std::process::exit(1);
     }
-
     
     for submission in submissions.iter_mut() {
         // check if submission has cloned a
@@ -17,18 +16,7 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
             continue;
         }
 
-        let mut tasks_to_check = vec![];
-        // find task 1 name
-        if let Some(t1) = submission.has_task1.clone() {
-            tasks_to_check.push(t1);
-        }
-
-        // find task 2 name
-        if let Some(t2) = submission.has_task2.clone() {
-            tasks_to_check.push(t2);
-        }
-
-        for task in tasks_to_check.iter() {
+        for task in tasks_to_check(submission).iter() {
             // clone string so we can borrow submission mutably
             let student_folder = submission.student_folder.clone();
             let task_main_file = match get_submission_main_file(submission, &task) {
@@ -66,11 +54,9 @@ pub fn compile_commits(submissions: &mut [StudentProjectSubmission]) {
 
                 // compile with gcc
                 let standards = ["c99", "c90", "c89", "c11", "c17"];
-
                 let mut command_output = "".to_string();
                 
                 for standard in standards.iter() {
-                    
                     match run_command(format!("gcc -std={} ./rp_workspace/repos/{}/{}/{}", standard, student_folder.replace(" ", "\\ "), task, task_main_file).as_str()) {
                         Ok(t) => {
                             command_output = t;

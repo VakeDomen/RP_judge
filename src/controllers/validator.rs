@@ -1,5 +1,7 @@
 use std::{fs, path::Path};
 
+use crate::models::student_project::StudentProjectSubmission;
+
 use super::os_helper::folder_names;
 
 pub fn check_workdir() -> bool {
@@ -70,4 +72,17 @@ pub fn find_accepted_folder(folder_name: &str, accepted_names: &[&str]) -> Optio
     }
 
     None
+}
+
+pub fn tasks_to_check(submission: &StudentProjectSubmission) -> Vec<String> {
+    let mut names = vec![];
+    // find task 1 name
+    if let Some(t1) = submission.has_task1.clone() {
+        names.push(t1);
+    }
+    // find task 2 name
+    if let Some(t2) = submission.has_task2.clone() {
+        names.push(t2);
+    }
+    names
 }
